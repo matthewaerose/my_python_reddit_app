@@ -1,6 +1,6 @@
 import requests
 import requests.auth
-
+import praw
 
 class PythonRedditApp:
 
@@ -10,6 +10,7 @@ class PythonRedditApp:
         self.PASSWORD = ""
         self.USERNAME = ''
         self.TOKEN = ''
+        self.subject_redditor = ''
 
     def read_file(self):
         f = open("text", "r")
@@ -38,6 +39,9 @@ class PythonRedditApp:
     def get_username(self):
         return self.USERNAME
 
+    def get_token(self):
+        return self.TOKEN
+
     def generate_token(self):
         client_auth = requests.auth.HTTPBasicAuth(app.get_client_id(), app.get_secret())
         post_data = {"grant_type": "password", "username": app.get_username(), "password": app.get_password()}
@@ -47,12 +51,20 @@ class PythonRedditApp:
         res = response.json()
         self.TOKEN = res['access_token']
 
-    def get_token(self):
-        return self.TOKEN
+
 
 
 app = PythonRedditApp()
 app.read_file()
 app.generate_token()
+reddit = praw.Reddit(client_id=app.get_client_id(),
+            client_secret=app.get_secret(),
+            password=app.get_password(),
+            user_agent="USERAGENT",
+            username=app.get_username())
 
-print(app.get_token())
+for comment in reddit.redditor().comments.new(limit=None):
+    print(comment.body.split('\n', 1)[0][:79])
+
+
+# print(app.get_token())
