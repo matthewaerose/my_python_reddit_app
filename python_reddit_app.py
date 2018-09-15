@@ -1,6 +1,7 @@
 import requests
 import requests.auth
 import praw
+import re
 
 class PythonRedditApp:
 
@@ -63,8 +64,13 @@ reddit = praw.Reddit(client_id=app.get_client_id(),
             user_agent="USERAGENT",
             username=app.get_username())
 
-for comment in reddit.redditor().comments.new(limit=None):
-    print(comment.body.split('\n', 1)[0][:79])
+comment_dictionary = []
 
+for comment in reddit.redditor('').comments.new(limit=None):
+    result = re.sub('([^\w\s/]|_)+', '', comment.body)
+    comment_dictionary.append(result)
+
+comment_dictionary.
+print(f"number of comments: {len(comment_dictionary)}")
 
 # print(app.get_token())
