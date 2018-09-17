@@ -3,6 +3,12 @@ import requests.auth
 import praw
 import re
 
+import os
+from os import path
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+
+
 class PythonRedditApp:
 
     def __init__(self):
@@ -44,6 +50,7 @@ class PythonRedditApp:
         return self.TOKEN
 
     def generate_token(self):
+        print("Generating token")
         client_auth = requests.auth.HTTPBasicAuth(app.get_client_id(), app.get_secret())
         post_data = {"grant_type": "password", "username": app.get_username(), "password": app.get_password()}
         headers = {"User-Agent": f"ChangeMeClient/0.1 by {app.get_username()}"}
@@ -51,6 +58,7 @@ class PythonRedditApp:
                                  headers=headers)
         res = response.json()
         self.TOKEN = res['access_token']
+        print(f"token generated: {self.get_token()}\n")
 
 
 
@@ -58,19 +66,40 @@ class PythonRedditApp:
 app = PythonRedditApp()
 app.read_file()
 app.generate_token()
+print("making reddit instance")
 reddit = praw.Reddit(client_id=app.get_client_id(),
             client_secret=app.get_secret(),
             password=app.get_password(),
             user_agent="USERAGENT",
             username=app.get_username())
+print("reddit instance made\n")
 
 comment_dictionary = []
 
-for comment in reddit.redditor('').comments.new(limit=None):
+username = input("Enter the username from which to gather comments: ")
+
+print(f"Gathering comments for: {username}")
+for comment in reddit.redditor(username).comments.new(limit=None):
     result = re.sub('([^\w\s/]|_)+', '', comment.body)
-    comment_dictionary.append(result)
+    comment_dictionary.append(result.encode("utf-8"))
 
-comment_dictionary.
-print(f"number of comments: {len(comment_dictionary)}")
+print(f"Gathered comments.\n")
 
-# print(app.get_token())
+print("saving comments")
+with open('comment_text.txt', 'w') as file:
+    for item in comment_dictionary:
+        file.write("%s\n" % item)
+
+print("comments saved to file\n")
+
+print("reading comments")
+text = open('comment_text.txt').read()
+
+print("comment file read\n")
+
+wordcloud = WordCloud(max_font_size=40).generate(text)
+plt.figure()
+plt.imshow(wordcloud, interpolation="bilinear")
+plt.axis("off")
+plt.show()
+
